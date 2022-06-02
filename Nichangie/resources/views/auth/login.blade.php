@@ -82,7 +82,7 @@
 <script src="{{ asset('assets/js/jquery.bootstrap-touchspin.js')}}"></script>
 <script src="{{ asset('assets/js/intl-tel-input/js/intlTelInput.min.js')}}"></script>
 <script type="text/javascript">
-    var utilUrl = "{{ asset('assets/js/intl-tel-input/js/utils.js?1638200991544')}}"
+    var utilUrl = "{{ asset('assets/js/intl-tel-input/js/utils.js')}}"
 </script>
 <script src="{{ asset('assets/js/auth-login.js')}}"></script>
 @endsection

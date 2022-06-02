@@ -26,7 +26,7 @@
                         <div class="card">
                             @include('flash-message')
                             <div class="card-block">
-                                <h6 class="section-title"><strong>Note:</strong> Multiple campaigns withdraw will not involve featured campaigns.</h6>
+                                <!-- <h6 class="section-title"><strong>Note:</strong> Multiple campaigns withdraw will not involve featured campaigns.</h6> -->
                                 <form action="{{ route('transaction.request') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <div class="form-group">
@@ -34,7 +34,7 @@
                                         <input type="number" name="amount" class="form-control" id="amount" aria-describedby="emailHelp" placeholder="Enter amount">
                                         <input type="hidden" name="campaign_id" value="{{ (!empty($campaign->id)) ? $campaign->id : '' }}" class="form-control">
                                         <input type="hidden" name="user_id" value="{{ $user->id }}" class="form-control">
-                                        <small id="emailHelp" class="form-text text-muted">{{ __('Current balance: TZS ')}} {{ $balance ?? 0}}</small>
+                                        <small id="emailHelp" class="form-text text-muted">{{ __('Maximum amount to withdraw: TZS ')}} {{ $balance ?? 0}}</small>
                                     </div>
                                     <div class="form-group">
                                         <label for="deposit" class="form-control-label">{{ __('Amount to receive')}}</label>

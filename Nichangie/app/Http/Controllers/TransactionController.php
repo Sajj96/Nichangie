@@ -59,7 +59,7 @@ class TransactionController extends Controller
             return view('admin.transactions.withdraw', compact('campaign', 'balance','user'));
         }
 
-        $balance = $transaction->userNonFeaturedBalance($user->id);
+        $balance = $transaction->userBalance($user->id);
         $campaign = (object) array('fee_percent' => 5);
         return view('admin.transactions.withdraw', compact('balance','user','campaign'));
     }
@@ -90,12 +90,6 @@ class TransactionController extends Controller
 
                 if ($request->amount > $balance) {
                     return redirect()->route('transaction.withdraw')->with('error', 'Sorry you don\'t have enough balance in this campaign to withdraw ' . $request->amount . '!');
-                }
-            } else {
-                $balance = $transaction->userNonFeaturedBalance($user->id);
-
-                if ($request->amount > $balance) {
-                    return redirect()->route('transaction.withdraw', $user->id)->with('error', 'Sorry you don\'t have enough balance to withdraw ' . $request->amount . '!');
                 }
             }
 

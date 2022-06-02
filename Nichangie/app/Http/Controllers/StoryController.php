@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
 use Rap2hpoutre\FastExcel\FastExcel;
 use Box\Spout\Writer\Common\Creator\Style\StyleBuilder;
+use Carbon\Carbon;
 use DataTables;
 
 class StoryController extends Controller
@@ -236,10 +237,10 @@ class StoryController extends Controller
     {
         if ($request->ajax()) {
             $campaigns = DB::table('stories')
-                        ->join('users', 'stories.owner_id', 'users.id')
+                        ->leftJoin('users', 'stories.owner_id', 'users.id')
                         ->leftJoin('donations', 'stories.id','donations.campaign_id')
-                        ->select('stories.id','stories.title','stories.fundgoals','stories.created_at','users.name', 'users.lastname','users.id as userid','stories.deadline','stories.status','stories.description',DB::raw('SUM(donations.amount) as amount')) 
-                        ->groupBy('stories.id','stories.title','stories.fundgoals','stories.created_at','users.name', 'users.lastname','stories.deadline','stories.status','stories.description');
+                        ->select('stories.id','stories.title','stories.fundgoals','stories.created_at','users.name', 'users.lastname','stories.owner_id','stories.deadline','stories.status','stories.description',DB::raw('SUM(donations.amount) as amount')) 
+                        ->groupBy('stories.id');
             // $campaigns = DB::table('stories');
             return Datatables::of($campaigns)
                     ->addIndexColumn()
@@ -271,13 +272,37 @@ class StoryController extends Controller
                                         <input type="hidden" value="'.$row->id.'" name="campaign_id">
                                         <button type="submit" class="btn btn-danger waves-effect" data-toggle="tooltip" data-placement="top" title="Close Campaign"><i class="ti-close"></i></button>
                                     </form>
-                                    <form data-id-withdraw="'.$row->id.'" class="withdraw-form" style="margin: 0 5px;" action="'.route("transaction.withdraw",$row->userid).'" method="POST">
+                                    <form data-id-withdraw="'.$row->id.'" class="withdraw-form" style="margin: 0 5px;" action="'.route("transaction.withdraw",$row->owner_id).'" method="POST">
                                         <input type="hidden" name="_token" value="'.csrf_token().'">
                                         <input type="hidden" value="'.$row->id.'" name="id">
                                         <button type="submit" class="btn btn-success waves-effect" data-toggle="tooltip" data-placement="top" title="Request Withdraw"><i class="ti-wallet"></i></button>
                                     </form>
                                     <a href="'.route("campaign.export", $row->id).'" class="btn btn-info waves-effect" data-toggle="tooltip" data-placement="top" title="Export Data"><i class="ti-download"></i></a>
                                     </div>';
+                    })
+                    ->filter(function ($query) use ($request) {
+                        if (!empty($request->get('status')) && ($request->has('status'))) {
+                            $query->where('stories.status', $request->get('status'));
+                        }
+        
+                        if(!empty($request->get('from'))) {
+                            if ($request->has('from') && $request->has('to')) {
+                                $startDate = Carbon::createFromFormat('Y-m-d', $request->get('from'));
+                                $endDate = Carbon::createFromFormat('Y-m-d', $request->get('to'));
+                                $query->where('stories.created_at', '>=', $startDate)
+                                ->where('stories.created_at', '<=', $endDate);
+                            }
+                        }
+
+                        if (!empty($request->get('search'))) {
+                            $query->where(function($w) use($request){
+                               $search = $request->get('search');
+                               $w->orWhere('stories.title', 'LIKE', "%$search%")
+                               ->orWhere('stories.status', 'LIKE', "%$search%")
+                               ->orWhere('users.name', 'LIKE', "%$search%")
+                               ->orWhere('users.lastname', 'LIKE', "%$search%");
+                           });
+                       }
                     })
                     ->rawColumns(['title','action','status'])
                     ->make(true);
