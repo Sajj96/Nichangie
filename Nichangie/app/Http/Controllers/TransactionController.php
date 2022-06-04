@@ -51,6 +51,7 @@ class TransactionController extends Controller
                             ->leftJoin('donations', 'stories.id', 'donations.campaign_id')
                             ->select('stories.id', 'stories.title','stories.fee_percent', 'stories.fundgoals', 'stories.deadline', 'stories.status', 'stories.description', DB::raw('SUM(donations.amount) as amount'))
                             ->where('stories.owner_id', $user->id)
+                            ->where('donations.status',Donation::PAID)
                             ->where('stories.id', $request->id)
                             ->groupBy('stories.id', 'stories.title','stories.fee_percent', 'stories.fundgoals', 'stories.deadline', 'stories.status', 'stories.description')
                             ->first();
@@ -125,6 +126,7 @@ class TransactionController extends Controller
                                     ->select('stories.id', 'stories.title','stories.fee_percent', 'stories.fundgoals', 'stories.deadline', 'stories.status', 'stories.description', DB::raw('SUM(donations.amount) as amount'))
                                     ->where('stories.owner_id', $user->id)
                                     ->where('stories.id', $request->campaign_id)
+                                    ->where('donations.status',Donation::PAID)
                                     ->groupBy('stories.id', 'stories.title','stories.fee_percent', 'stories.fundgoals', 'stories.deadline', 'stories.status', 'stories.description')
                                     ->first();
         

@@ -49,7 +49,7 @@
                                             <td>{{ $key+1 }}</td>
                                             <td><a href="{{ route('campaign.show', $rows->id) }}">{{ $rows->title }}</a></td>
                                             <td>{{ substr($rows->description,0,10) }}...</td>
-                                            <td>{{ number_format($rows->amount) }}</td>
+                                            <td>{{ ($rows->donationstatus == 1) ? number_format($rows->amount) : number_format(0) }}</td>
                                             <td>{{ number_format($rows->fundgoals) }}</td>
                                             <td>{{ $rows->deadline }}</td>
                                             <td>

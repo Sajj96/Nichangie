@@ -19,6 +19,7 @@ class DonationController extends Controller
                                 ->join('stories','donations.campaign_id','stories.id')
                                 ->where('stories.owner_id', $user->id)
                                 ->select('donations.*','stories.title')
+                                ->where('donations.status',Donation::PAID)
                                 ->get();
         return view('admin.donations.donations', compact('donations'));
     }
@@ -34,10 +35,17 @@ class DonationController extends Controller
                     ->addColumn('story_title', function ($row) {
                         return '<a href="'.route('campaign.show', $row->story_id).'">'.substr($row->title,0,15).'</a>';
                     })
+                    ->addColumn('status', function ($row) {
+                        if($row->status == 0){
+                            return '<div class="label-main"><label class="label label-lg bg-default">UNPAID</label></div>';
+                        } else {
+                            return '<div class="label-main"><label class="label label-lg bg-success">PAID</label></div>';
+                        } 
+                    })
                     ->addColumn('created', function ($row) {
                         return date('M d Y',strtotime($row->created_at));
                     })
-                    ->rawColumns(['story_title'])
+                    ->rawColumns(['status','story_title'])
                     ->make(true);
         }
 
@@ -81,15 +89,13 @@ class DonationController extends Controller
             $donation->contact = str_replace('+','',$request->phone);
             $donation->comment = $request->comment;
             $donation->amount = $amount;
+            $donation->transaction_number = $string;
+            $donation->status = Donation::UPPAID;
             $ussd = app(PaymentService::class);
             $response = $ussd->ussdPush(str_replace('+','',$request->phone),$amount,$string)->getData();
-            $donation->transaction_number = $response->body->response->reference;
             if($response->body->response->responseStatus == "Accepted Successfully") {
-                // if($donation->save())
-                $success_payment = $ussd->successPayment($response->body->response->reference);
-                print_r($success_payment);
-                exit;
-                return redirect()->route('campaign.show', $request->campaign_id)->with('success',$success_payment);
+                if($donation->save())
+                return redirect()->route('campaign.show', $request->campaign_id)->with('success','Donation is in progress. Please complete payment through USSD appeared on your phone');
             }
         } catch (\Exception $e) {
             return redirect()->route('campaign.show', $request->campaign_id)->with('error',$e->getMessage());

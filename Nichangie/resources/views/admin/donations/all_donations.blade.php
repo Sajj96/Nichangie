@@ -32,10 +32,11 @@
                                     <thead>
                                         <tr>
                                             <th>#</th>
-                                            <th>Campaign Title</th>
-                                            <th>Donor Name</th>
-                                            <th>Amount (TZS)</th>
-                                            <th>Date</th>
+                                            <th>{{ __('Campaign Title')}}</th>
+                                            <th>{{ __('Donor Name')}}</th>
+                                            <th>{{ __('Amount (TZS)')}}</th>
+                                            <th>{{ __('Date')}}</th>
+                                            <th>{{ __('Status')}}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -92,6 +93,7 @@
             {data: 'name', name: 'name'},
             {data: 'amount', name: 'amount'},
             {data: 'created', name: 'created'},
+            {data: 'status', name: 'status'}
         ],
         order: [[1, 'asc']]
     });

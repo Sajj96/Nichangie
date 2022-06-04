@@ -20,6 +20,7 @@ class Donation extends Model
                         ->select('stories.id','stories.title','stories.fundgoals','stories.deadline','stories.status','stories.description',DB::raw('SUM(donations.amount) as amount')) 
                         ->where('stories.owner_id', $user_id)
                         ->where('stories.id', $campaign_id)
+                        ->where('donations.status',self::PAID)
                         ->groupBy('stories.id','stories.title','stories.fundgoals','stories.deadline','stories.status','stories.description')
                         ->get();
         $sum = 0;
@@ -36,6 +37,7 @@ class Donation extends Model
                         ->join('donations', 'stories.id','donations.campaign_id')
                         ->select('stories.id',DB::raw('SUM(donations.amount) as amount')) 
                         ->where('stories.owner_id', $user_id)
+                        ->where('donations.status',self::PAID)
                         ->groupBy('stories.id')
                         ->get();
         $sum = 0;
@@ -53,6 +55,7 @@ class Donation extends Model
                         ->select('stories.id',DB::raw('SUM(donations.amount) as amount')) 
                         ->where('stories.owner_id', $user_id)
                         ->where('stories.type','<>', 1)
+                        ->where('donations.status',self::PAID)
                         ->groupBy('stories.id')
                         ->get();
         $sum = 0;

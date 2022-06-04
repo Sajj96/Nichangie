@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Donation;
 use App\Models\Story;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,9 +40,11 @@ class CategoryController extends Controller
         foreach($campaigns as $key=>$rows) {
             $donations = DB::table('donations')
                             ->where('campaign_id', $rows->id)
+                            ->where('status',Donation::PAID)
                             ->get();
             $total_donations = DB::table('donations')
                                 ->where('campaign_id', $rows->id)
+                                ->where('status',Donation::PAID)
                                 ->sum('amount');
             $total_donations = $total_donations ?? 0;
             $donation_percent = ($rows->fundgoals > 0) ? ($total_donations/$rows->fundgoals) * 100 : 0;

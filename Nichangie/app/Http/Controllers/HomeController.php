@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Donation;
 use App\Models\Story;
 use App\Models\Testimonial;
 use App\Models\Transaction;
@@ -32,6 +33,7 @@ class HomeController extends Controller
                                 ->join('donations','stories.id','=','donations.campaign_id')
                                 ->select('stories.*','users.name','users.lastname',DB::raw('COUNT(donations.campaign_id) as count'))
                                 ->where('stories.status','<>',"Closed")
+                                ->where('donations.status',Donation::PAID)
                                 ->groupBy('donations.campaign_id')
                                 ->orderBy(DB::raw('COUNT(donations.campaign_id)'), 'DESC')
                                 ->get();
@@ -47,9 +49,11 @@ class HomeController extends Controller
             
             $donations = DB::table('donations')
                             ->where('campaign_id', $rows->id)
+                            ->where('status',Donation::PAID)
                             ->get();
             $total_donations = DB::table('donations')
                                 ->where('campaign_id', $rows->id)
+                                ->where('status',Donation::PAID)
                                 ->sum('amount');
             $donation_percent = ($rows->fundgoals > 0) ? ($total_donations/$rows->fundgoals) * 100 : 0;
             $donation_array = (object) array(
@@ -89,6 +93,7 @@ class HomeController extends Controller
         $total_donations = DB::table('donations')
                                 ->join('stories','donations.campaign_id','stories.id')
                                 ->where('stories.owner_id', $user->id)
+                                ->where('donations.status',Donation::PAID)
                                 ->sum('donations.amount');
         return view('admin.home',compact('user_campaings','total_donations','withdrawn','balance'));
     }

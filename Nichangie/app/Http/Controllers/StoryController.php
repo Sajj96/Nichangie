@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Story;
 use App\Models\Category;
+use App\Models\Donation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,9 +29,11 @@ class StoryController extends Controller
         $campaign = Story::find($id);
         $donations = DB::table('donations')
                             ->where('campaign_id', $id)
+                            ->where('status',Donation::PAID)
                             ->get();
         $total_donations = DB::table('donations')
                             ->where('campaign_id', $id)
+                            ->where('status',Donation::PAID)
                             ->sum('amount');
         $donation_percent = ($campaign->fundgoals > 0) ? ($total_donations/$campaign->fundgoals) * 100 : 0;
         $date = date('Y-m-d');
@@ -87,9 +90,11 @@ class StoryController extends Controller
         foreach($campaigns as $key=>$rows) {
             $donations = DB::table('donations')
                             ->where('campaign_id', $rows->id)
+                            ->where('status',Donation::PAID)
                             ->get();
             $total_donations = DB::table('donations')
                                 ->where('campaign_id', $rows->id)
+                                ->where('status',Donation::PAID)
                                 ->sum('amount');
             $donation_percent = ($rows->fundgoals > 0) ? ($total_donations/$rows->fundgoals) * 100 : 0;
             $donation_array = (object) array(
@@ -175,7 +180,7 @@ class StoryController extends Controller
         $stories = Story::where('owner_id', $user->id)->get();
         $campaigns = DB::table('stories')
                         ->leftJoin('donations', 'stories.id','donations.campaign_id')
-                        ->select('stories.id','stories.title','stories.type','stories.fundgoals','stories.deadline','stories.status','stories.description',DB::raw('SUM(donations.amount) as amount')) 
+                        ->select('stories.id','stories.title','stories.type','stories.fundgoals','stories.deadline','stories.status','stories.description','donations.status as donationstatus',DB::raw('SUM(donations.amount) as amount')) 
                         ->where('stories.owner_id', $user->id)
                         ->orderBy('stories.id', 'DESC')
                         ->groupBy('stories.id','stories.title','stories.type','stories.fundgoals','stories.deadline','stories.status','stories.description')
@@ -192,6 +197,7 @@ class StoryController extends Controller
                         ->select('donations.*','stories.title')
                         ->where('stories.owner_id', $user->id)
                         ->where('donations.campaign_id', $id)
+                        ->where('donations.status',Donation::PAID)
                         ->orderBy('donations.id', 'DESC')
                         ->get();
         $header_style = (new StyleBuilder())->setFontBold()->build();
@@ -239,7 +245,7 @@ class StoryController extends Controller
             $campaigns = DB::table('stories')
                         ->leftJoin('users', 'stories.owner_id', 'users.id')
                         ->leftJoin('donations', 'stories.id','donations.campaign_id')
-                        ->select('stories.id','stories.title','stories.fundgoals','stories.created_at','users.name', 'users.lastname','stories.owner_id','stories.deadline','stories.status','stories.description',DB::raw('SUM(donations.amount) as amount')) 
+                        ->select('stories.id','stories.title','stories.fundgoals','stories.created_at','users.name', 'users.lastname','stories.owner_id','stories.deadline','stories.status','stories.description','donations.status as donationstatus',DB::raw('SUM(donations.amount) as amount')) 
                         ->groupBy('stories.id');
             // $campaigns = DB::table('stories');
             return Datatables::of($campaigns)
@@ -249,6 +255,9 @@ class StoryController extends Controller
                     })
                     ->addColumn('title', function ($row) {
                         return '<a href="'.route('campaign.show', $row->id).'">'.substr($row->title,0,15).'</a>';
+                    })
+                    ->addColumn('amount', function ($row) {
+                        return ($row->donationstatus == 1) ? number_format($row->amount) : number_format(0);
                     })
                     ->addColumn('created_at', function ($row) {
                         return date('M d Y',strtotime($row->created_at));

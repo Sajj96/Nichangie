@@ -57,44 +57,4 @@ class PaymentService {
             return response()->json($responseBody);
         }
     }
-
-    public function successPayment($reference) {
-
-        $username = "13";
-        $password = "Nachangia@2022";
-        $timestamp = "20220506104027";
-        
-        $apipassword = base64_encode(hash("sha256", $username.$password.$timestamp, true));
-
-        try {
-            $response = $this->client->request('POST', $this->url, [
-                "verify" => false,
-                'headers' => [
-                    'Accept'       => 'application/json',
-                    'Content-Type' => 'application/json'
-                ],
-                "json" => [
-                    "body" => (object) array(
-                        "request" => (object) array(
-                            "command" => "QueryStatus",
-                            "reference" => $reference
-                        )
-                    ),
-                    "header" => (object) array(
-                        "username"  => $username,
-                        "password"  => $apipassword,
-                        "timestamp" => $timestamp
-                    )
-                ]
-            ]);
-            $statuscode = $response->getStatusCode();
-            if ($statuscode == 200) {
-                $responseData = json_decode($response->getBody()->getContents()); 
-                return response()->json($responseData);               
-            }
-        } catch (ClientErrorResponseException $exception) {
-            $responseBody = $exception->getResponse()->getBody(true);
-            return response()->json($responseBody);
-        }
-    }
 }
